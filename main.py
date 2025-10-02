@@ -8,6 +8,8 @@ import pandas as pd
 from jobspy import scrape_jobs
 
 try:
+
+try:
     jobs = scrape_jobs(
         site_name=["indeed", "linkedin", "zip_recruiter", "google"], # "glassdoor", "bayt", "naukri", "bdjobs"
         search_term="  Accountant",
@@ -30,9 +32,9 @@ except Exception as e:
     # Create empty DataFrame for HTML generation
     jobs = pd.DataFrame()
 
-# Generate HTML for web display
-try:
-    html_content = f"""
+    # Generate HTML for web display
+    try:
+        html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,36 +59,71 @@ try:
 </html>
 """
 
-    with open("portfolio/jobs.html", "w") as f:
-        f.write(html_content)
-    print("HTML file generated successfully.")
+        with open("portfolio/jobs.html", "w") as f:
+            f.write(html_content)
+        print("HTML file generated successfully.")
+    except Exception as e:
+        print(f"Error generating HTML: {e}")
+        import traceback
+        traceback.print_exc()
+
+    # Send results via email if configured
+    sender_email = os.getenv('SENDER_EMAIL')
+    sender_password = os.getenv('SENDER_PASSWORD')
+    receiver_email = os.getenv('RECEIVER_EMAIL')
+
+    if sender_email and sender_password and receiver_email:
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            msg['Subject'] = 'Job Scraper Results'
+
+            html_table = jobs.head().to_html()
+            body = f"<p>Found {len(jobs)} jobs</p>{html_table}"
+            msg.attach(MIMEText(body, 'html'))
+
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            text = msg.as_string()
+            server.sendmail(sender_email, receiver_email, text)
+            server.quit()
+            print("Results sent via email.")
+        except Exception as e:
+            print(f"Failed to send email: {e}")
 except Exception as e:
-    print(f"Error generating HTML: {e}")
+    print(f"Script failed with error: {e}")
     import traceback
     traceback.print_exc()
-
-# Send results via email if configured
-sender_email = os.getenv('SENDER_EMAIL')
-sender_password = os.getenv('SENDER_PASSWORD')
-receiver_email = os.getenv('RECEIVER_EMAIL')
-
-if sender_email and sender_password and receiver_email:
+    # Ensure HTML is generated even on failure
     try:
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = receiver_email
-        msg['Subject'] = 'Job Scraper Results'
-
-        html_table = jobs.head().to_html()
-        body = f"<p>Found {len(jobs)} jobs</p>{html_table}"
-        msg.attach(MIMEText(body, 'html'))
-
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        text = msg.as_string()
-        server.sendmail(sender_email, receiver_email, text)
-        server.quit()
-        print("Results sent via email.")
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+        jobs = pd.DataFrame()  # empty
+        html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest Job Scraping Results</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Latest Job Scraping Results</h1>
+        <p>Updated on {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+    </header>
+    <main>
+        <p>Error occurred during scraping. No jobs found.</p>
+    </main>
+    <footer>
+        <p>Powered by JobSpy</p>
+    </footer>
+</body>
+</html>
+"""
+        with open("portfolio/jobs.html", "w") as f:
+            f.write(html_content)
+        print("Error HTML generated.")
+    except Exception as html_e:
+        print(f"Failed to generate error HTML: {html_e}")
