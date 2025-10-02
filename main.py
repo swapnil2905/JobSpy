@@ -13,7 +13,7 @@ jobs = scrape_jobs(
     google_search_term="  Accountant jobs near Melbourne, VIC since this week",
     location="Melbourne , VIC",
     results_wanted=15,
-    hours_old=11,
+    hours_old=4,
     country_indeed='AUSTRALIA',
    
     # linkedin_fetch_description=True # gets more info such as description, direct job url (slower)
@@ -79,9 +79,9 @@ if sender_email and sender_password and receiver_email:
         print(f"Failed to send email: {e}")
 
 # Send to Airtable if configured
-airtable_api_key = os.getenv('patLpmWdMC64P0QZ9.1f3817bbd616d930fcdbf45e17607b2e41b0932431268407fba7e34a1c144c58')
-airtable_base_id = os.getenv('yzyFtwKv9CLlct')
-airtable_table_name = os.getenv('Dumpfrommain')
+airtable_api_key = os.getenv('AIRTABLE_API_KEY')
+airtable_base_id = os.getenv('AIRTABLE_BASE_ID')
+airtable_table_name = os.getenv('AIRTABLE_TABLE_NAME')
 
 if airtable_api_key and airtable_base_id and airtable_table_name:
     try:
