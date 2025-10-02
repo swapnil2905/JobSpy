@@ -7,24 +7,32 @@ import requests
 import pandas as pd
 from jobspy import scrape_jobs
 
-jobs = scrape_jobs(
-    site_name=["indeed", "linkedin", "zip_recruiter", "google"], # "glassdoor", "bayt", "naukri", "bdjobs"
-    search_term="  Accountant",
-    google_search_term="  Accountant jobs near Melbourne, VIC since this week",
-    location="Melbourne , VIC",
-    results_wanted=15,
-    hours_old=4,
-    country_indeed='AUSTRALIA',
-   
-    # linkedin_fetch_description=True # gets more info such as description, direct job url (slower)
-    #proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
-)
-print(f"Found {len(jobs)} jobs")
-print(jobs.head())
-jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False) # to_excel
+try:
+    jobs = scrape_jobs(
+        site_name=["indeed", "linkedin", "zip_recruiter", "google"], # "glassdoor", "bayt", "naukri", "bdjobs"
+        search_term="  Accountant",
+        google_search_term="  Accountant jobs near Melbourne, VIC since this week",
+        location="Melbourne , VIC",
+        results_wanted=15,
+        hours_old=4,
+        country_indeed='AUSTRALIA',
+        
+        # linkedin_fetch_description=True # gets more info such as description, direct job url (slower)
+        #proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
+    )
+    print(f"Found {len(jobs)} jobs")
+    print(jobs.head())
+    jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False) # to_excel
+except Exception as e:
+    print(f"Error during job scraping: {e}")
+    import traceback
+    traceback.print_exc()
+    # Create empty DataFrame for HTML generation
+    jobs = pd.DataFrame()
 
 # Generate HTML for web display
-html_content = f"""
+try:
+    html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,7 +48,7 @@ html_content = f"""
     </header>
     <main>
         <p>Found {len(jobs)} jobs</p>
-        {jobs.to_html(index=False, classes='jobs-table')}
+        {jobs.to_html(index=False, classes='jobs-table') if not jobs.empty else '<p>No jobs found.</p>'}
     </main>
     <footer>
         <p>Powered by JobSpy</p>
@@ -49,8 +57,13 @@ html_content = f"""
 </html>
 """
 
-with open("portfolio/jobs.html", "w") as f:
-    f.write(html_content)
+    with open("portfolio/jobs.html", "w") as f:
+        f.write(html_content)
+    print("HTML file generated successfully.")
+except Exception as e:
+    print(f"Error generating HTML: {e}")
+    import traceback
+    traceback.print_exc()
 
 # Send results via email if configured
 sender_email = os.getenv('SENDER_EMAIL')
