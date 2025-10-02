@@ -77,34 +77,3 @@ if sender_email and sender_password and receiver_email:
         print("Results sent via email.")
     except Exception as e:
         print(f"Failed to send email: {e}")
-
-# Send to Airtable if configured
-airtable_api_key = os.getenv('AIRTABLE_API_KEY')
-airtable_base_id = os.getenv('AIRTABLE_BASE_ID')
-airtable_table_name = os.getenv('AIRTABLE_TABLE_NAME')
-
-if airtable_api_key and airtable_base_id and airtable_table_name:
-    try:
-        url = f'https://api.airtable.com/v0/{airtable_base_id}/{airtable_table_name}'
-        headers = {
-            'Authorization': f'Bearer {airtable_api_key}',
-            'Content-Type': 'application/json'
-        }
-
-        records = []
-        for _, row in jobs.iterrows():
-            record = {'fields': row.to_dict()}
-            records.append(record)
-
-        # Send in batches of 10
-        for i in range(0, len(records), 10):
-            batch = records[i:i+10]
-            data = {'records': batch}
-            response = requests.post(url, headers=headers, json=data)
-            if response.status_code != 200:
-                print(f'Error sending to Airtable: {response.text}')
-                break
-        else:
-            print("Results sent to Airtable.")
-    except Exception as e:
-        print(f"Failed to send to Airtable: {e}")
