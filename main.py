@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -11,9 +12,9 @@ try:
     try:
         jobs = scrape_jobs(
             site_name=["indeed", "linkedin", "zip_recruiter", "google"], # "glassdoor", "bayt", "naukri", "bdjobs"
-            search_term="  Accountant",
-            google_search_term="  Accountant jobs near Melbourne, VIC since this week",
-            location="Melbourne , VIC",
+            search_term="Accountant",
+            google_search_term="Accountant jobs near Melbourne, VIC since this week",
+            location="Melbourne, VIC",
             results_wanted=15,
             hours_old=4,
             country_indeed='AUSTRALIA',
@@ -23,7 +24,12 @@ try:
         )
         print(f"Found {len(jobs)} jobs")
         print(jobs.head())
-        jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False) # to_excel
+        try:
+            jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False) # to_excel
+        except Exception as e:
+            print(f"Error saving to CSV: {e}")
+            import traceback
+            traceback.print_exc()
     except Exception as e:
         print(f"Error during job scraping: {e}")
         import traceback
@@ -97,10 +103,11 @@ try:
     if slack_webhook_url and not jobs.empty:
         try:
             # Create a simple text table for top 5 jobs
-            top_jobs = jobs.head(5)[['title', 'company', 'location', 'site']]
+            top_jobs = jobs.head(5)[['title', 'company', 'location', 'site', 'job_url']]
             table_text = f"Found {len(jobs)} jobs\n\n" + top_jobs.to_string(index=False)
             payload = {"text": f"Daily Job Scraper Results\n```{table_text}```"}
             response = requests.post(slack_webhook_url, json=payload)
+            print(f"Slack response: {response.status_code} - {response.text}")
             if response.status_code == 200:
                 print("Results sent to Slack.")
             else:
@@ -166,3 +173,4 @@ except Exception as e:
         print("Error HTML generated.")
     except Exception as html_e:
         print(f"Failed to generate error HTML: {html_e}")
+sys.exit(0)
