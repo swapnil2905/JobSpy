@@ -8,29 +8,28 @@ import pandas as pd
 from jobspy import scrape_jobs
 
 try:
+    try:
+        jobs = scrape_jobs(
+            site_name=["indeed", "linkedin", "zip_recruiter", "google"], # "glassdoor", "bayt", "naukri", "bdjobs"
+            search_term="  Accountant",
+            google_search_term="  Accountant jobs near Melbourne, VIC since this week",
+            location="Melbourne , VIC",
+            results_wanted=15,
+            hours_old=4,
+            country_indeed='AUSTRALIA',
 
-try:
-    jobs = scrape_jobs(
-        site_name=["indeed", "linkedin", "zip_recruiter", "google"], # "glassdoor", "bayt", "naukri", "bdjobs"
-        search_term="  Accountant",
-        google_search_term="  Accountant jobs near Melbourne, VIC since this week",
-        location="Melbourne , VIC",
-        results_wanted=15,
-        hours_old=4,
-        country_indeed='AUSTRALIA',
-        
-        # linkedin_fetch_description=True # gets more info such as description, direct job url (slower)
-        #proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
-    )
-    print(f"Found {len(jobs)} jobs")
-    print(jobs.head())
-    jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False) # to_excel
-except Exception as e:
-    print(f"Error during job scraping: {e}")
-    import traceback
-    traceback.print_exc()
-    # Create empty DataFrame for HTML generation
-    jobs = pd.DataFrame()
+            # linkedin_fetch_description=True # gets more info such as description, direct job url (slower)
+            #proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
+        )
+        print(f"Found {len(jobs)} jobs")
+        print(jobs.head())
+        jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False) # to_excel
+    except Exception as e:
+        print(f"Error during job scraping: {e}")
+        import traceback
+        traceback.print_exc()
+        # Create empty DataFrame for HTML generation
+        jobs = pd.DataFrame()
 
     # Generate HTML for web display
     try:
