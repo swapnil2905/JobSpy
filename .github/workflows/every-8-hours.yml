@@ -25,7 +25,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: poetry install --no-dev
+        run: poetry install --only main
 
       - name: Run job scraper
         run: poetry run python main.py
