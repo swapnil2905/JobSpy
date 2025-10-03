@@ -100,20 +100,33 @@ try:
 
     # Send to Slack if configured
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
-    if slack_webhook_url and not jobs.empty:
+    if slack_webhook_url:
         try:
-            # Create a simple text table for top 5 jobs
-            top_jobs = jobs.head(5)[['title', 'company', 'location', 'site', 'job_url']]
-            table_text = f"Found {len(jobs)} jobs\n\n" + top_jobs.to_string(index=False)
-            payload = {"text": f"Daily Job Scraper Results\n```{table_text}```"}
-            response = requests.post(slack_webhook_url, json=payload)
-            print(f"Slack response: {response.status_code} - {response.text}")
-            if response.status_code == 200:
-                print("Results sent to Slack.")
+            # Send test message
+            test_payload = {"text": "The Alert is working, you will get the jobs in few seconds"}
+            test_response = requests.post(slack_webhook_url, json=test_payload)
+            print(f"Slack test response: {test_response.status_code} - {test_response.text}")
+            if test_response.status_code == 200:
+                print("Test message sent to Slack.")
             else:
-                print(f"Failed to send to Slack: {response.text}")
+                print(f"Failed to send test message to Slack: {test_response.text}")
         except Exception as e:
-            print(f"Failed to send to Slack: {e}")
+            print(f"Failed to send test message to Slack: {e}")
+
+        if not jobs.empty:
+            try:
+                # Create a simple text table for top 5 jobs
+                top_jobs = jobs.head(5)[['title', 'company', 'location', 'site', 'job_url']]
+                table_text = f"Found {len(jobs)} jobs\n\n" + top_jobs.to_string(index=False)
+                payload = {"text": f"Daily Job Scraper Results\n```{table_text}```"}
+                response = requests.post(slack_webhook_url, json=payload)
+                print(f"Slack response: {response.status_code} - {response.text}")
+                if response.status_code == 200:
+                    print("Results sent to Slack.")
+                else:
+                    print(f"Failed to send to Slack: {response.text}")
+            except Exception as e:
+                print(f"Failed to send to Slack: {e}")
 
     # Send to Google Sheets if configured
     google_sheet_id = os.getenv('GOOGLE_SHEET_ID')
