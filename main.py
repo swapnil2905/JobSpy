@@ -91,6 +91,46 @@ try:
             print("Results sent via email.")
         except Exception as e:
             print(f"Failed to send email: {e}")
+
+    # Send to Slack if configured
+    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+    if slack_webhook_url and not jobs.empty:
+        try:
+            # Create a simple text table for top 5 jobs
+            top_jobs = jobs.head(5)[['title', 'company', 'location', 'site']]
+            table_text = f"Found {len(jobs)} jobs\n\n" + top_jobs.to_string(index=False)
+            payload = {"text": f"Daily Job Scraper Results\n```{table_text}```"}
+            response = requests.post(slack_webhook_url, json=payload)
+            if response.status_code == 200:
+                print("Results sent to Slack.")
+            else:
+                print(f"Failed to send to Slack: {response.text}")
+        except Exception as e:
+            print(f"Failed to send to Slack: {e}")
+
+    # Send to Google Sheets if configured
+    google_sheet_id = os.getenv('GOOGLE_SHEET_ID')
+    google_credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    if google_sheet_id and google_credentials_json and not jobs.empty:
+        try:
+            import gspread
+            from oauth2client.service_account import ServiceAccountCredentials
+            import json
+
+            scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+            creds_dict = json.loads(google_credentials_json)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+            client = gspread.authorize(creds)
+            sheet = client.open_by_key(google_sheet_id).sheet1
+
+            # Append new jobs (check for duplicates by title or id)
+            existing_titles = sheet.col_values(1)  # Assume title in column 1
+            for _, job in jobs.iterrows():
+                if job['title'] not in existing_titles:
+                    sheet.append_row([job['title'], job['company'], job['location'], job['site'], str(job['date_posted'])])
+            print("Results appended to Google Sheets.")
+        except Exception as e:
+            print(f"Failed to send to Google Sheets: {e}")
 except Exception as e:
     print(f"Script failed with error: {e}")
     import traceback
