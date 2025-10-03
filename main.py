@@ -100,6 +100,7 @@ try:
 
     # Send to Slack if configured
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+    print("Slack webhook configured" if slack_webhook_url else "Slack webhook not configured")
     if slack_webhook_url:
         try:
             # Send test message
